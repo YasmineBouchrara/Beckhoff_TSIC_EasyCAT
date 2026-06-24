@@ -69,11 +69,20 @@ Damit Arduino, EasyCAT und Beckhoff dieselbe Datenstruktur verwenden, müssen mi
 
 Die Custom-Konfiguration besteht aus 0 Byte Output und 16 Byte Input, also vier `float`-Werten.
 
+Die passende EasyConfigurator-Projektdatei liegt unter:
+
+```text
+EasyConfigurator/Beckhoff_TSIC_EasyCAT.prj
+```
+
+Diese Datei kann im Easy Configurator geöffnet werden, um die zugehörigen `.h`, `.xml` und `.bin` Dateien zu erzeugen.
+
 ## Projektdateien
 
 - `Beckhoff_V2.ino`
 - `EasyCAT.h`
 - `EasyCAT_TSIC.h`
+- `EasyConfigurator/Beckhoff_TSIC_EasyCAT.prj`
 - `TSIC.h`
 - `TSIC.cpp`
 
