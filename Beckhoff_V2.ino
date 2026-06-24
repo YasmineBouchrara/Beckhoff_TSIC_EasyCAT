@@ -1,36 +1,51 @@
 /**
- *  Programm für TSIC-Erfassung und Weiterleitung über EtherCAT an Beckhoff CX8190
- *  
- *  Präzisionskühlung
- *  Auslesen von 2x4 TSIC716 Sensoren und Mittelwertbildung.
- *  5 Temperaturwerte in Array, Sortierung und Medianbildung
- *  Rel. V1 = TSIC-Erfassung steht, Kommunikation EtherCAT noch nicht
+ *  Beckhoff_V2.ino
+ *
+ *  TSIC-Temperaturerfassung mit EasyCAT/EtherCAT
+ *
+ *  Dieses Programm liest vier TSIC716-Temperatursensoren aus und
+ *  uebertraegt die gemessenen Werte ueber EasyCAT/EtherCAT an eine
+ *  Beckhoff-Steuerung.
+ *
+ *  Aktiver Aufbau:
+ *    TSIC_1: Umgebungstemperatur
+ *    TSIC_2: Praezisionsbecken
+ *    TSIC_3: Hauswasser
+ *    TSIC_4: Luft / Air
+ *
+ *  Aenderungen gegenueber der alten Version:
+ *    - Reduzierung von 8 auf 4 aktive Sensoren
+ *    - Anpassung der Pinbelegung an den aktuellen Hardwareaufbau
+ *    - Entfernen der alten Mittelwert-/Sortierlogik
+ *    - Direkte Uebergabe der aktuellen Temperaturwerte an EasyCAT
+ *    - Ausgabe der Messwerte ueber den Serial Monitor
  */
-//Bibliotheken
+// Bibliotheken
 #define CUSTOM
 #include "C:\Users\yasmi\Desktop\Beckhoff_V2\EasyCAT_TSIC.h"
-#include "C:\Users\yasmi\Desktop\Beckhoff_V2\TSIC.h"                     //eigene TSIC Bibliothek, da eigene Korrekturfaktoren hardcoded integriert sind
+#include "C:\Users\yasmi\Desktop\Beckhoff_V2\TSIC.h"                     // Eigene TSIC-Bibliothek mit integrierten Korrekturfaktoren
 #include "C:\Users\yasmi\Desktop\Beckhoff_V2\EasyCAT.h"
 #include <SPI.h>
 
-EasyCAT EASYCAT; 
+EasyCAT EASYCAT;
 
-//Wasserregelung TSIC [SignalPin 2 mitte, VCCPin 3 links] rundung oben, beinchen nach hinten //#### Pins (27, 26) defekt! -> dritter Sensorsteckplatz defekt!
-TSIC Sensor1(1, 0);               // 1. Sensor Präzisionskühlung - Umgebungstemperatur
-TSIC Sensor2(3, 2);               // 2. Sensor Präzisionskühlung - Präzisionsbecken
-TSIC Sensor3(5, 4);               // 3. Sensor Präzisionskühlung - Hauswasser
-TSIC Sensor4(7, 6);               // 4. Sensor Präzisionskühlung - Air 
-//TSIC Sensor5(1, 0);               // 5. Sensor Maschine - Innenraum     ###### Pinbelegung nicht richtig
-//TSIC Sensor6(1, 0);               // 6. Sensor Maschine - frei          ###### Pinbelegung nicht richtig
-//TSIC Sensor7(1, 0);               // 3. Sensor Maschine - frei          ###### Pinbelegung nicht richtig
-//TSIC Sensor8(1, 0);               // 4. Sensor Maschine - frei          ###### Pinbelegung nicht richtig
+// TSIC-Pinbelegung: TSIC(SignalPin, VCCPin)
+// Sensor von vorne: Signal in der Mitte, VCC links, abgerundete Seite oben.
+TSIC Sensor1(1, 0);               // TSIC_1 - Umgebungstemperatur
+TSIC Sensor2(3, 2);               // TSIC_2 - Praezisionsbecken
+TSIC Sensor3(5, 4);               // TSIC_3 - Hauswasser
+TSIC Sensor4(7, 6);               // TSIC_4 - Luft / Air
+//TSIC Sensor5(1, 0);               // TSIC_5 - Maschine / Innenraum, in dieser Version deaktiviert
+//TSIC Sensor6(1, 0);               // TSIC_6 - frei, in dieser Version deaktiviert
+//TSIC Sensor7(1, 0);               // TSIC_7 - frei, in dieser Version deaktiviert
+//TSIC Sensor8(1, 0);               // TSIC_8 - frei, in dieser Version deaktiviert
 
-//==========================Variablen für Temperaturerfassung
+//========================== Variablen fuer Temperaturerfassung
 uint16_t temperature = 0;
 float Temperatur_C = 0;  float Temperatur_C1 = 0;  float Temperatur_C2 = 0;  float Temperatur_C3 = 0;  float Temperatur_C4 = 0;  float Temperatur_C5 = 0;  float Temperatur_C6 = 0;  float Temperatur_C7 = 0;  float Temperatur_C8 = 0;
 float Tcorr_1 = 0;  float Tcorr_2 = 0;  float Tcorr_3 = 0;  float Tcorr_4 = 0;  float Tcorr_5 = 0;  float Tcorr_6 = 0;  float Tcorr_7 = 0;  float Tcorr_8 = 0;
 
-//Variablen für EASYCAT
+// Zuordnung der Temperaturwerte zu den EasyCAT-Eingangsdaten
 /*Temperatur_C1 = EasyCAT.BufferIn.Cust.TSIC_1;
 Temperatur_C2 = EASYCAT.BufferIn.Cust.TSIC_2;
 Temperatur_C3 = EASYCAT.BufferIn.Cust.TSIC_3;
@@ -48,43 +63,43 @@ unsigned long PreviousCycle = 0;
 
 void setup()
 {
-    Serial.begin (115200);           //1. Serielle Datenübertragung
-    
-    Serial.print ("\nEasyCAT - Generic EtherCAT slave\n");          // print the banner 
-  
-    if (EASYCAT.Init() == true)                                     // initialization
-    {                                                               // succesfully completed
+    Serial.begin (115200);           // Serielle Ausgabe fuer Kontrolle im Serial Monitor
+
+    Serial.print ("\nEasyCAT - Generic EtherCAT slave\n");          // Startmeldung
+
+    if (EASYCAT.Init() == true)                                     // EasyCAT initialisieren
+    {                                                               // Initialisierung erfolgreich
       Serial.print ("initialized");                                 //
     }                                                               //
-  
-    else                                                            // initialization failed   
-    {                                                               // the EasyCAT board was not recognized
-      Serial.print ("initialization failed");                       //     
-                                                                  // The most common reason is that the SPI 
-                                                                  // chip select choosen on the board doesn't 
-                                                                  // match the one choosen by the firmware
-                                                                  
-    pinMode(13, OUTPUT);                                          // stay in loop for ever
-                                                                  // with the Arduino led blinking
+
+    else                                                            // Initialisierung fehlgeschlagen
+    {                                                               // EasyCAT-Board wurde nicht erkannt
+      Serial.print ("initialization failed");                       //
+                                                                  // Haeufige Ursache: SPI-Chip-Select am Board
+                                                                  // passt nicht zur Firmware-Konfiguration.
+                                                                  //
+
+    pinMode(13, OUTPUT);                                          // Fehleranzeige: Arduino-LED blinkt dauerhaft
+                                                                  //
     while(1)                                                      //
-    {                                                             //   
-      digitalWrite (13, LOW);                                     // 
-      delay(500);                                                 //   
-      digitalWrite (13, HIGH);                                    //  
-      delay(500);                                                 // 
-    }                                                             // 
-  } 
-  
+    {                                                             //
+      digitalWrite (13, LOW);                                     //
+      delay(500);                                                 //
+      digitalWrite (13, HIGH);                                    //
+      delay(500);                                                 //
+    }                                                             //
+  }
+
   PreviousMillis = millis();
 
 }
 
 void loop()
 {
-  EASYCAT.MainTask();                                   // execute the EasyCAT task
-  Temperaturerfassung_Kuehlung();             //Auslesen der Kühlung TSIC-Sensoren nacheinander
-  Ausgabe_Mon();                              //Ausgabe auf Serial Monitor
-}  
+  EASYCAT.MainTask();                                   // EasyCAT-Kommunikation zyklisch bearbeiten
+  Temperaturerfassung_Kuehlung();             // Vier TSIC-Sensoren nacheinander auslesen
+  Ausgabe_Mon();                              // Messwerte auf dem Serial Monitor ausgeben
+}
 
 //_________________________________________
 //             Unterfunktionen
@@ -141,4 +156,4 @@ void Ausgabe_Mon()
   //Serial.println(Temperatur_C7);
   //Serial.print("TSIC_8: ");
   //Serial.println(Temperatur_C8);
-}  
+}
