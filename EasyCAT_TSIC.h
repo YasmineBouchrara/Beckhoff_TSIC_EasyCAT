@@ -3,17 +3,21 @@
 
 //-------------------------------------------------------------------//
 //                                                                   //
-//     This file has been created by the Easy Configurator tool      //
+//     Custom EasyCAT process data for the 4-sensor TSIC setup       //
 //                                                                   //
-//     Easy Configurator project EasyCAT_TSIC.prj
+//     Inputs from EasyCAT/Arduino to Beckhoff:                      //
+//       TSIC_1, TSIC_2, TSIC_3, TSIC_4 as float values              //
+//                                                                   //
+//     The matching .xml and .bin files must be created with the     //
+//     Easy Configurator and must use the same PDO entries.          //
 //                                                                   //
 //-------------------------------------------------------------------//
 
 
 #define CUST_BYTE_NUM_OUT	0
-#define CUST_BYTE_NUM_IN	64
+#define CUST_BYTE_NUM_IN	16
 #define TOT_BYTE_NUM_ROUND_OUT	0
-#define TOT_BYTE_NUM_ROUND_IN	64
+#define TOT_BYTE_NUM_ROUND_IN	16
 
 
 typedef union												//---- output buffer ----
@@ -34,18 +38,6 @@ typedef union												//---- input buffer ----
 		float       TSIC_2;
 		float       TSIC_3;
 		float       TSIC_4;
-		float       TSIC_5;
-		float       TSIC_6;
-		float       TSIC_7;
-		float       TSIC_8;
-		float       AVG_TSIC_1;
-		float       AVG_TSIC_2;
-		float       AVG_TSIC_3;
-		float       AVG_TSIC_4;
-		float       AVG_TSIC_5;
-		float       AVG_TSIC_6;
-		float       AVG_TSIC_7;
-		float       AVG_TSIC_8;
 	}Cust;
 } PROCBUFFER_IN;
 

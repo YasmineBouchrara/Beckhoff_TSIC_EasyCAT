@@ -42,6 +42,33 @@ Zusätzlich werden die aktuellen Messwerte über den Serial Monitor ausgegeben, 
 - Aktivierung der seriellen Ausgabe zur Kontrolle der Messwerte
 - Einfügen kurzer Verzögerungen nach jeder Sensorabfrage
 
+## EasyCAT-Konfiguration
+
+Das Projekt verwendet den EasyCAT Custom Mode:
+
+```cpp
+#define CUSTOM
+#include "EasyCAT_TSIC.h"
+#include "EasyCAT.h"
+```
+
+Die Datei `EasyCAT_TSIC.h` ist auf vier Eingangswerte ausgelegt:
+
+| PDO-Eingang | Datentyp | Bedeutung |
+|---|---|---|
+| TSIC_1 | float | Umgebungstemperatur |
+| TSIC_2 | float | Präzisionsbecken |
+| TSIC_3 | float | Hauswasser |
+| TSIC_4 | float | Luft / Air |
+
+Damit Arduino, EasyCAT und Beckhoff dieselbe Datenstruktur verwenden, müssen mit dem Easy Configurator passende Dateien erzeugt werden:
+
+- `.h` Datei: liegt als `EasyCAT_TSIC.h` im Arduino-Projekt
+- `.xml` Datei: in Beckhoff/TwinCAT bzw. im EtherCAT-Konfigurator verwenden
+- `.bin` Datei: mit dem Easy Configurator auf die EasyCAT-EEPROM schreiben
+
+Die Custom-Konfiguration besteht aus 0 Byte Output und 16 Byte Input, also vier `float`-Werten.
+
 ## Projektdateien
 
 - `Beckhoff_V2.ino`
