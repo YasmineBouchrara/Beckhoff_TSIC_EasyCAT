@@ -22,9 +22,9 @@
  */
 // Bibliotheken
 #define CUSTOM
-#include "C:\Users\yasmi\Desktop\Beckhoff_V2\EasyCAT_TSIC.h"
-#include "C:\Users\yasmi\Desktop\Beckhoff_V2\TSIC.h"                     // Eigene TSIC-Bibliothek mit integrierten Korrekturfaktoren
-#include "C:\Users\yasmi\Desktop\Beckhoff_V2\EasyCAT.h"
+#include "EasyCAT_TSIC.h"
+#include "TSIC.h"                     // Eigene TSIC-Bibliothek mit integrierten Korrekturfaktoren
+#include "EasyCAT.h"
 #include <SPI.h>
 
 EasyCAT EASYCAT;
